@@ -1,0 +1,642 @@
+﻿<!DOCTYPE html>
+<html lang="zxx">
+    <head>
+        <title>Projects</title>
+        <meta charset="UTF-8">
+        <meta name="description" content="Projects">
+        <meta name="keywords" content="porto, photo, html">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="img/favicon.ico" rel="shortcut icon"/>
+        <link href="https://fonts.googleapis.com/css?family=Montserrat&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="css/bootstrap.min.css"/>
+        <link rel="stylesheet" href="css/font-awesome.min.css"/>
+        <link rel="stylesheet" href="css/style.css"/>
+        <link rel="stylesheet" href="./css/preloader.css">
+        <link rel="stylesheet" href="css/">
+    </head>
+    <body>
+        <div class="loader">
+            <img src="img/preloader.gif"/>
+        </div>
+        <header class="header-section header-default-bg set-bg" data-setbg="img/header-bg.jpg">
+            <div class="header-warp">
+                <div class="nav-switch">
+                    <i class="fa fa-bars"></i>
+                </div>
+                <ul class="main-menu">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="projects.html"><u>Projects</u></a></li>
+                    <!--
+                    <li><a href="photography.html">Photography</a></li>
+                    -->
+                    <li><a href="contact.html">Contact</a></li>
+                    <li><a href="aboutme.html">About me</a></li>
+                    <link rel="stylesheet" href="https://use.typekit.net/ptl4tyb.css">
+                </ul>
+            </div>
+        </header>
+        <section class="blog-page set-bg">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-9">
+                        
+                        <div class="blog-item"> <!--Comp Org project-->
+                            <h3>32-Bit Cycle-Accurate RISC-V Simulator - Computer Organization</h3>
+                            <div class="blog-thumb">
+                                <img src="img/blog/5pipeline.png" alt="">
+                                <div class="blog-date">November 2021</div>
+                                <br><br>
+                                <h5 style="color: black;">Introduction</h5>
+                                <br>
+                                <p>
+                                    During this semester-long project, I built a cycle-accurate RISC-V simulator using the CodAL language. Unfortunately,
+                                    I had to sign an NDA to use this software, so the code is unavailable. However, much of the processor's overall architecture can be 
+                                    reviewed. 
+                                    <br>
+                                    <br>
+                                    A significant feature of this simulator is that it is cycle-accurate. Modern CPUs can process more than one instruction at a 
+                                    time, which increases instruction throughput and reduces overall logic downtime. This is called pipelining and is done by splitting the CPU into different stages. 
+                                    For example, if a processor has ten stages, it can actually work on ten instructions at once. In this case, my processor was split into
+                                    five stages: the fetch (IF), decode (ID), execute (EX), memory (ME), and writeback (WB) stages. Of course, pipelining increases the complexity of the processor, and many
+                                    features must be added to ensure that instructions are executed correctly. The main feature is called forwarding. 
+                                    <br>
+                                    <br>
+                                        Forwarding is needed when the processor loads a value into a register, but that value is needed before it can actually be written to the processor's registers.
+                                        For example, take this section of code, assuming a pipelined processor is used: 
+                                        <br>
+                                    <code>
+                                        <br>
+                                        addi x3, x2, 0x4
+                                        <br>
+                                        sw x6, 0(x3)
+                                        <br>
+                                    </code>
+                                    <br>
+                                    First, the immediate 0x4 is added to the value in register two, and this value is stored in register 3. Then, the value in x6 is stored in memory 
+                                    at the location pointed to by register 3. In this case, once the first instruction is done adding 0x4 + x2, i.e. done in the execute stage, this value will 
+                                    need to be forwarded back to the execute stage so the second instruction can store it in memory. In this case, the value from the first instruction will be in the 
+                                    memory stage, and it will need to be forwarded to the second instruction in the execute stage. Values from the WB stage will also need to be forwarded back to the execute 
+                                    stage, in case of instructions like: 
+                                    <br>
+                                    <code>
+                                        <br>
+                                        addi x3, x2, 0x4
+                                        <br>
+                                        slt x7, x1, x23
+                                        <br>
+                                        sw x6, 0(x3)
+                                        <br>
+                                    </code>
+                                    <br>
+                                    If forwarding was not used, a significant amount of stalling would need to be applied, so that the processor could wait for data until it is ready. This would significantly impact performance 
+                                    and instruction throughput. 
+                                    <br><br>
+                                    Another feature of a pipelined processor is the pipeline registers. Between each stage, there are a set of registers that are updated each clock cycle of the CPU. These registers hold data that 
+                                    should be passed from one stage to the adjacent stages. These essentially act as a buffer between each stage and ensure that data propagates correctly through the processor. 
+                                </p>
+                                <br>
+                                <h5 style="color: black;">Schematic Nomenclature</h5>
+                                <br>
+                                <p>
+                                    Before we can go over the schematic, its naming conventions must be understood. Anything beginning with s_ is a signal and is 
+                                    essentially a wire that carries data to another element in the processor. Anything beginning with r_ is a register and is 
+                                    used to store values in between processor cycles. If a signal begins with s_id_, it is in the decode stage, and if a register begins
+                                    with r_id_, it is a pipeline register between the decode and fetch stage. 
+                                </p>
+                                <br>
+                                <h5 style="color: black;">The Fetch (IF) Stage</h5>
+                                <br>
+                                <p>
+                                    The first stage of the processor is responsible for fetching instructions from the instruction memory. As seen in the schematic below, 
+                                    the instruction pointed by r_pc is loaded into the instruction pipeline register (not pictured). Since instructions are aligned by four 
+                                    bytes, four is added to the previous program counter to get the next instruction. The mux is used when there is a branch, and the processor
+                                    needs to load an instruction that is not the current pc + 4. As seen, this address is taken from the ME stage and is selected by a signal in the ME stage. 
+                                    <img src="img/blog/IF.jpg" alt="">
+                                </p>
+                                <br>
+                                <h5 style="color: black;">The Decode (ID) Stage</h5>
+                                <br>
+                                <p>
+                                    The decode stage is by far the most complex stage of the processor. In this stage, the 32-bit instruction is parsed, generating various values for the processor. 
+                                    <br>
+                                    <img src="img/blog/ID.jpg" alt="">
+                                    <br>
+                                    The decode block does the following, based on the 17-bit OPC value in the instruction register: 
+                                </p>
+                                    <ul style="margin-left: 5%; color: gray; font-size: 14px;">
+                                        <li>aluop: Selects the operation for the ALU in the execute stage.</li>
+                                        <li>regwrite: Set to true if the data should be written to the register file.</li>
+                                        <li>alusrc2: Selects the second ALU input.</li>
+                                        <li>halt: Set to true if the processor should halt execution.</li>
+                                        <li>immsel: Tells the processor where the immediate is located in the instruction if any. </li>
+                                        <li>alusrc1: Selects the first ALU input.</li>
+                                        <li>brnchop: Set true if the instruction is a branch or conditional branch such as <code>beq</code> or <code>bne</code>.</li>
+                                        <li>rfwtsel: Selects which value will be written to the register file. </li>
+                                        <li>brnchsel: Selects if the branch address comes from the ALU or the PC + immediate.</li>
+                                        <li>memop: Selects the memory operation, such as store word, load byte, etc.</li>
+                                    </ul>
+                                    <br>
+                                    <p>
+                                        The RFFWD block dictates if the value to be written back to the register in the WB stage should be forwarded, or if the value in the register file should be used. It uses
+                                        rs1 and rs2 selected by the instruction, along with regwrite and the destination register, both in the WB stage, to make this decision. Next, the immediate is grabbed from the instruction,
+                                        based on the instruction type indicated by <code>s_id_immsel</code>. 
+                                        <br><br>
+                                        Finally, the LDHAZ block generates the s_id_loadhaz signal, which is set to true if the processor needs to stall for memory access. 
+                                    </p>
+                                    <br>
+                                <h5 style="color: black;">The Execute (EX) Stage</h5>
+                                <br>
+                                    <p>
+                                        The execute stage is where most of the work is done. Here, the ALU is responsible for executing the instruction. 
+                                    </p>
+                                    <img src="img/blog/EX.jpg" alt="">
+                                    <p>
+                                        The FWDCTL block selects which source should be used for each of the ALU inputs, if it should be from the register file, 
+                                        the previous ALU result, or the result that is about to be written to the register file. The ALU's first source is chosen 
+                                        between this selection, zero, and the current PC. The ALU's second source is chosen 
+                                        between this selected value and the immediate value. 
+                                        <br><br>
+                                        <code>r_me_bradd</code> is the branch address, used in the fetch stage. Based on <code>r_ex_brnchsel</code>, <code>r_me_bradd</code> is 
+                                        either the result from the ALU, or the current PC plus the immediate. 
+                                        <br><br>
+                                        The memory section at the bottom of this stage's schematic handles the input to memory. Using a Mealy state machine, the address, memory operation, and data to be written, 
+                                        data is read and written to memory. Data read from memory is available in the next stage. 
+
+                                    </p>
+                                    <br>
+                                    <h5 style="color: black;">The Memory (ME) Stage</h5>
+                                    <br>
+                                    <p>
+                                        In the memory stage, data is read from memory. Also, the next pc (pc + 4 or bradd) is determined by the branch operation, and if the ALU's output is zero. In the case of a branch,
+                                        <code>s_me_pcsrc</code> is true. 
+                                        <img src="img/blog/ME.jpg" alt="">
+                                    </p>
+
+                                    <h5 style="color: black;">The Writeback (WB) Stage</h5>
+                                    <br>
+                                    <p>
+                                        In the writeback stage, data is written back to the register file. 
+                                        <img src="img/blog/WB.jpg" alt="">
+                                        The destination register is selected by <code>r_wb_rd</code>, and the data written back can either be the ALU's result, the next PC, or the data from memory.
+                                        The SIGNEX block sign extends the data from memory if applicable. 
+                                    </p>
+                        </div>
+                        <div class="blog-item">
+                            <h3>Arduino Sensor Shield - PCB Design and Manufacture Lab</h3>
+                            <div class="blog-thumb">
+                                <img src="img/blog/shield_bare.jpg" alt="" style="width: 80;">
+                                <div class="blog-date">November 2021</div>
+                                <p>
+                                    In this lab, I desinged and assembled a sensor shield that is compatable with Arduino Unos. This shield has a heartbeat sensor, 
+                                    Hall effect sensor, gas sensor, temperature sensor, microphone, buzzer, RGB LEDs, an ADC, and a DAC. In the first stage of the design, 
+                                    I made a note sheet of how these parts would connect together, and any kind of supporting circuitry needed. Some of these parts will
+                                    use the ADC to communicate with the Arduino, such as the temperature sensor, heartbeat sensor, and Hall sensor, since they output and 
+                                    analog signal. The next step was designing the schematic for the board. 
+                                </p>
+                                <img src="img/blog/shield_schematic.PNG" alt="" style="width: 80%;">
+                                <p>
+                                    Using my notesheet, I began by placing any of the major components. Most needed a decoupling capacitor, and as seen, all subsystems apart
+                                    from the LEDs have isolation switches which will be helpful in case of debuging. The heartbeat sensor uses a phototransistor in a low-pass circuit, 
+                                    along with two of the RGB LEDs to supply a red light source. A high-pass filter was added, along with the microphone's internal low-pass filter, to make 
+                                    a bandpass filter that passes frequencies within the range of human voices. After this, I began the layout. 
+                                </p>
+                                <img src="img/blog/shield_layout.PNG" alt="" style="width: 80%;">
+                                <p>
+                                    I tried to make this design as compact as possible so that it fit between the pinheaders of a standard Arduino Uno. I began by arranging all of the parts, 
+                                    and slowly detangled as many nets as I could. After this was done, I then routed all of the signals, and then 5V from the Arduino. The Arduino Uno only has One
+                                    5V pin, so  routing this line was somewhat difficult. I usually begin layout by placing my power rails and thten signals, however I found that it was much more helpful 
+                                    to place signal paths first. Because this is a four layer board, anytime there is a via, an adjacent return via was placed to reduce cavity noise crosstalk. Although 
+                                    both the ADC and DAC use I2C to communicate with the Aruino, I was able to separate these ICs since I2C from the Arduino is connected to both A5 and A6, along with its dedicated pins. 
+                                    Once the layout was done, I sent my design to JLC for manufacture.
+                                </p>
+                                <img src="img/blog/shield_bare.jpg" alt="" style="width: 80%;">
+                                <p>
+                                    For this design, students were asked to hand assemble all parts to the board. For the most part this was easy since the majority of parts are either through-hole or large SMD parts. I did have 
+                                    significant trouble with the ADC, since I had to use a hot-air gun due to its small pad size. After a number of attempts and a half-broken pad, all of the ADC's pins were secured on the board. 
+                                </p>
+                                <img src="img/blog/shield_assembled.jpg" alt="" style="width: 80%;">
+                                <p>
+                                    To test the board, I used various Arduino code samples with some slight modifications. One quirk of this design is that because the buzzer is connected to the TX pin, anytime the board is flashed 
+                                    it emits a garbled mess of static. I have a strong feeling that my ADC is broken, because whenever the Arduino tries to access the ADC object the board stops execution, making heartbeat, temperature, 
+                                    and magnetic sensing impossible. I did verify that the heartbeat circuit was functional with the use of the test probe. On an oscilloscope, the phototransistor's emitter had a notable voltage rise and 
+                                    fall, which matched my heartbeat. Fortunately, all of the other subsystems of the board worked!
+                                </p>
+                            </div>
+                        </div>
+                        <!--OD DNS Project-->
+                        <!--
+                        <div class="blog-item">
+                            <h3>Multithreaded DNS Resolver - Operating Systems</h3>
+                            <br>
+                            <div class="blog-thumb">
+                                <img src="img/blog/os_diagram.png" alt="">
+                                <div class="blog-date">October 2021</div>
+                                <p>
+                                    <br>
+                                    In this project, a multithreaded DNS resolver was created. It used 10 producer threads to read from input files containing hostnames, and wrote these hostnames to a shared buffer. 10 consumer
+                                    threads read from this buffer, and used a provided IP address resolver function to resolve the IP, and then write the IP's to a single output file. In my implementation, I used a number of semaphores 
+                                    to protect the shared buffer, output file, and the stdout buffer. 
+                                </p>
+                                <h5 style="color: black;">Producer Threads</h5>
+                                <br>
+                                <img src="img/blog/produce.PNG" alt="">
+                                <p>
+                                    First, the producer waits on a mutex that locks the arguments passed by <code>pthread_create</code>. In this case, the input file's name is protected, so that input files are not read more than once. 
+                                    Next, the file pointer is incremented, which points to a string in <code>argv</code>. After this, the file is opened and read line by line until the end of the file. The program then waits on the buffer 
+                                    for an empty slot and then waits on a mutex for the buffer. Once free, the hostname is written and the buffer's pointer is updated. The buffer is then unlocked, and the number of full spots is incremented. 
+                                </p>
+                                <h5 style="color: black;">Consumer Threads</h5>
+                                <br>
+                                <img src="img/blog/consume.PNG" alt="">
+                                <p>
+                                    For the consumer threads, each thread waits for the buffer to have at least one filled spot and then locks the buffer. A hostname is grabbed from the buffer, and then the buffer is unlocked and the empty count is
+                                    decremented. Next, the output file mutex is locked, and the hostname is passed to the given hostname resolver function to get the IP. Finally, the hostname and its IP are written to the output file. When the thread exits, it
+                                    prints out how many hostnames it resolved. 
+                                </p>
+                                <h5 style="color: black;">Main</h5>
+                                <br>
+                                <p>
+                                    In the main function, the semaphores are initialized, and various parameters from <code>argv</code> are captured. A number of structures are created so that the semaphores can be shared between threads. Then, each thread's 
+                                    <code>pthread_create</code> arguments are set, and <code>pthread_create</code> is called. Once all of the producer threads exit, the main thread posts the <code>fill_count</code> semaphore ten times, freeing any consumer threads blocked by 
+                                    this semaphore. Then, the consumer threads are joined. Finally, files are closed and the semaphores are destroyed. 
+                                </p>
+                                <a style="color: black; font-size: 14px;" href="https://github.com/NickWroble/CSCI-3753-Operating-Systems/tree/main/PA/PA3/B" target="_blank">
+                                    
+                                    A link to this project can be found by clicking anywhere on this sentence.
+                                </a>
+                            </div>
+                        </div>
+                    -->
+                        <div class="blog-item"> <!--VGA project-->
+                            <h3>Constructing a VGA controller - FPGA and VLSI Design</h3>
+                            <div class="blog-thumb">
+                                <img src="img/blog/vga_pins.jpg" alt="">
+                                <div class="blog-date">April 2021</div>
+                                <br><br>
+                                <p>
+                                    This post is the culmination of a semester-long project, wherein a VGA controller with 720p & 1080p resolutions was constructed using the DE10 Standard FPGA.  
+                                    <br>
+                                    <br>
+                                </p>
+                                <h5 style="color: black;">Part One: Basics of VGA</h5>
+                                <p>
+                                    <br>
+                                    The first step in this project was to implement the signal timings for horizontal and vertical sync pulses. Based on these timings,
+                                    the monitor can determine the number of pixels on the horizontal and the vertical. Using the diagram below, these timings can be 
+                                    modularly coded in Verilog. Modularity allows for resolution switching between 1080p and 720p (and any other standard resolutions) 
+                                    by simply changing parameters. 
+                                </p>
+                                <img src="img/blog/vga_timing.jpg">
+                                <p>
+                                    <br>
+                                    Within the Verilog code, each frame started by displaying the pixels, and then moved on to the front porch, sync pulse, and finally the back porch. This method 
+                                    allowed for straightforward coding. After this step was completed, the monitor recognized the 1280 by 720 pixel resolution, but no colors were being written
+                                    to the display. Anding the horizontal counter with base two numbers allowed for simple color bars to be displayed. 
+                                </p>
+                                <img src="img/blog/vga_color_bars.jpg">
+                                <br><br><br><br>
+                                <h5 style="color: black;">Part Two: Displaying boxes</h5>
+                                <p>
+                                    <br>
+                                    Part two required an expansion of the pixel generator, where two colored boxes will be displayed. The horizontal and vertical position of the boxes was controlled
+                                    by switches on the DE10 Standard, along with the color of the boxes. A one bit wide logic element determined if each box should be displayed, and was enabled if the
+                                    horizontal and vertical counters are in the box's display area. Overflow was also programmed, so if the box went off screen, it would reappear on the other edge of 
+                                    the display. 
+                                </p>
+                                <img src="img/blog/vga_boxes.gif">
+                                <br><br><br><br>
+                                <h5 style="color: black;">Part Three: 1080p</h5>
+                                <p>
+                                    <br>
+                                    Part three added 1080p to the video controller. As previously mentioned, modular Verilog allowed easy switching between 1080p and 720p resolutions. A new
+                                    phase lock loop had to be generated for the 1080p's 148.5 MHz clock. 
+                                </p>
+                                <h5 style="color: black;">Part Four: Connection to ROM</h5>
+                                <p>
+                                    <br>
+                                    Part four is the first time images will be displayed. Using the DE10 Standard's onboard ROM, images could be constructed into a MIF file in MATLAB, and then 
+                                    uploaded to the board's ROM. Since the board's ROM is not large enough for all 22,118,400 bits of a 24 bit 720p display, the images had to be scaled by a factor
+                                    of four. Fortunately, the horizontal and vertical counter's value could be shifted right two bits for integer division by four, allowing for simple and 
+                                    synthesizable Verilog code. I used a photo of my dog to test it out. 
+                                    
+                                </p>
+                                <img src="img/blog/reese_vga.jpg">
+                                <br><br>
+                                <a style="color: black; font-size: 14px;" href="https://github.com/NickWroble/ECEN-3002-FPGA-VLSI-Design/tree/main/vga_controller" target="_blank">
+                                    
+                                    A link to this project can be found by clicking anywhere on this sentence.
+                                </a>
+                            </div>
+                        </div>
+                        <div class="blog-item">  <!-- Data structures final project -->
+                            <h3>Analyzing Different Database and Sorting Algorithms - Data Structures</h3>
+                            <div class="blog-thumb">
+                                <img src="img/blog/dsfinal.PNG" alt="">
+                                <div style="margin-top: 30%;" class="blog-date">December 2020</div>
+                                <p>
+                                    <br>
+
+                                    In this final project, students were asked to create different implementations
+                                    for a mockup medical company. In part A, two databases were constructed, a doubly linked list 
+                                    and a hash table. In part B, two sorting algorithms were implemented: bubble sort and heap sort. 
+                                    In both parts, the efficiency of the algorithms will be analyzed and compared. 
+                                </p>
+                                <br>
+                                <h5 style="color: black;">Part A: The Hash Table and Doubly Linked List</h5>
+                                <p>
+                                    <br>
+                                    For this part, search and insert times were compared for both methods. 
+                                    <br><br>
+                                    Shown below is the insert times for the doubly linked list and the hash table.
+                                </p>
+                                    <img src="img/blog/hashdll insert.png" alt="">
+                                    <p>
+                                    As seen, both insert times are comparable. The doubly linked list inserts the new node at the head of
+                                    the list, so inserting is quick, with complexity O(1). The doubly linked list’s increased insert time is most
+                                    likely due to the fact that memory must be allocated when inserting a new node. Multiple collisions while
+                                    inserting an element in the hash table causes the spikes in insert times. On average, hash table insertions
+                                    have complexity O(1), and O(n) in its worst case.
+                                </p>
+                                
+                                <p>
+                                    <br>
+                                    Shown below are the search times for both methods. Note the different time scales. 
+                                </p>
+                                    <img src="img/blog/hashdll search.png" alt="">
+                                    <p>
+                                    As for search times, the hash table exceeds the doubly linked list. This is because the doubly linked list must
+                                    look at every node and check if the key matches the searched value, giving it complexity O(n). The hash
+                                    table’s array implementation allows the data to be accessed in constant time when no probing occurs. On
+                                    average, search times are O(1), and O(n) in the worst case. Delayed search times for the hash table occur
+                                    when there are multiple collisions while probing.
+                                </p>
+                                
+                                <p>
+
+                                </p>
+                                <br>
+                                <h5 style="color: black;">Part B: Bubble Sort and Heap Sort</h5>
+                                <p>
+                                    <br>
+
+                                    Shown below are the timings for bubble sort and heap sort. Note the different time scales.
+                                </p>
+                                    <img src="img/blog/bubbleheap.png" alt="">
+                                    <p>
+                                    Heap sort has vastly superior sorting times compared to bubble sort. This is because heap sort only operates
+                                    on the affected sub-trees, giving it time complexity O(n ∗ log(n)). Bubble sort has complexity of O(n<sup>2</sup>). On
+                                    the first iteration, the largest value is sent to the n<sup>th</sup> index. On the second iteration, the second largest value
+                                    is sent to the n − 1 index. This process is repeated n times for all contents of the array. This results in a
+                                    time complexity of O(n<sup>2</sup>). One disadvantage of heap sort is that the data is not perfectly sorted, however
+                                    with bubble sort the data is perfectly sorted.
+                                </p>
+                                <br>
+                                <h5 style="color: black;">Conclusion</h5>
+                                <p>
+                                    <br>
+                                    Part A: Overall, the hash table is more applicable for the database application. The hash table has far
+                                    superior searching times compared to the doubly linked list. As the number of keys in the database increases,
+                                    the search performance of the doubly linked list lessens, with complexity O(n). Compare that to the hash
+                                    table, where the time complexity for searching stays at O(1) on average.
+                                    <br>
+                                    <br>
+                                    Part B: For the sorting part of this project, heap sort is faster, however it does not perfectly sort all of the
+                                    data. With time complexity O(n ∗ log(n)), it vastly out performs bubble sort’s complexity of O(n<sup>2</sup>). One
+                                    advantage of bubble sort is that all of the data is in perfect order. Again, as the number of keys in the
+                                    database increases, bubble sort’s performance drastically reduces compared to heap sort.
+                                    <br>
+                                    <br>
+                                    In general, the chosen data structure depends on its operation. A doubly linked list might be more useful
+                                    than a hash table for a given application, and one sorting algorithm might be chosen over another based
+                                    on the use case. Knowing which structure to use for a given program is extremely important for efficient
+                                    algorithms.
+
+                                </p>
+<br>
+<br>
+
+                                <a style="color: black; font-size: 14px;" href="https://github.com/NickWroble/CSCI-2270-Data-Structures/tree/master/Final%20Project" target="_blank">A link for this project can be found by clicking anywhere on this sentence.</a>
+                                <br>
+                                <br>
+                            </div>
+                        </div>
+                        <div class="blog-item">  <!-- embedded i2c driver -->
+                            <h3>Creating I2C and LEUART Drivers - Embedded Software Engineering</h3>
+                            <div class="blog-thumb">
+                                <img src="img/blog/pearlgecko.JPG" alt="">
+                                <div style="margin-top: 30%;" class="blog-date">October 2020</div>
+                                <br>
+                                <p>
+                                    This post is a combination of two separate labs carried out on the Pearl Gecko 12. First,  an I2C driver was created for communication with 
+                                    an onboard temperature sensor, and then a LEUART driver was created for communication with a bluetooth module. Both drivers necessitated intimate
+                                    use of the Pearl Gecko's reference manual, hardware abstraction layer, and datasheets of the Si7021 temperature sensor and the HM-10 Bluetooth module.
+                                </p>
+                                <p>
+                                    Both implementations used a state machine, interrupts, and a process scheduler. These methods allowed for high energy efficiency, consuming tens of micro-Amps of 
+                                    current. 
+                                </p>
+        
+                                <br>
+                                <h5 style="color: black;">Part 1: The I2C Driver</h5>
+                                    <br>
+                                    <p>
+                                        Shown below is the Si7021's sequence to perform either a temperature or humidity measurement. A software flowchart was created to better visualize the datasheet's I2C 
+                                        bus communication sequence.
+                                    </p>
+                                    <img src="img/blog/si7021.PNG" alt="">
+                                    <p>
+                                        The flowchart shown below illustrates
+                                        how the driver communicates with the Si7021 slave and the necessary interrupts and states.
+                                    </p>
+                                    <img src="img/blog/i2cflowchart.jpg" alt="">   
+                                    <p>
+                                        The microcontroller starts out by unblocking sleep mode. 
+                                        A major focus of this class is to implement software with low energy consumption, on the order of tens of micro-Amps. Because of this, the microcontroller could 
+                                        run off of a compact battery for months. 
+                                    </p>
+                                    <p>
+                                        After exiting sleep mode, the Pearl Gecko sends the address of the Si7021 slave on the bus and waits for an acknowledgement. Then the Pearl's state changes to measure, where it
+                                        will next send a measure command to the slave. The slave will acknowledge the measure command, and then then the Pearl Gecko will enter the next state where it will send the slave's 
+                                        address on the bus along with a read command. Once an ACK is received, the Pearl Gecko enters the next state where it gets the most significant byte on the bus. The Pearl Gecko will 
+                                        send an ACK to the sensor, and then get the least significant byte of data. Once the lease significant byte is received the Pearl Gecko completes the I2C process. 
+                                
+                                    </p>
+                                    <p>
+                                        At the end of this I2C program, sleep mode is re-enabled.
+                                    </p>
+                                    <br>
+                                <h5 style="color: black;">Part 2: The LEUART Driver</h5>
+                                    <br>
+                                    <p>Like the I2C driver, a flowchart was first made to refine the software implementation process. </p>
+                                    <img src="img/blog/LEUART_flowchart.png" alt="">
+                                    <p>
+                                        First, the Pearl Gecko exits sleep mode and enables the TXBL interrupt. This interrupt allows the microcontroller to watch for when the UART bus
+                                        is ready for data transmission. Eventually, the master receives a TXBL interrupt from the slave, and the microcontroller enters the dataSent state. 
+                                        Then the Pearl Gecko sends on byte of data on the bus until the TXBL interrupt is received again. Then the state is updated to dataReceived and 
+                                        the TXBL interrupt is disabled. The TXC interrupt is enabled, which is true when there is no more data in the transmit shift register. Once the master receives
+                                        the TXC interrupt from the slave, the driver wraps up by disabling the TXC interrupt, scheduling the LEUART function, and unblocking sleep mode. 
+                                    </p>
+                                    <br>
+                                <h5 style="color: black;">Validating the Software</h5>
+                                    <br>
+                                    <p>
+                                        The primary method of validation is within the test driven development that was used throughout the creation of these labs. Unfortunately, this process is very grueling,
+                                        so I don't feel like writing about it!
+                                    </p>
+                                    <p>
+                                        As shown below, the microcontroller consumes micro-Amps while in sleep mode, and bumps up to sub-milli-Amps while the microcontroller is using LEUART or I2C. 
+                                    </p>
+                                    <img src="img/blog/energyprofile.PNG" alt="">
+                                    <p>
+                                        The large spikes in current are when LEUART is on, and the small spikes are when I2C is on. The large hump of current in the middle of the display is from an onboard LED, 
+                                        which turns on when the temperature is above 80 F. 
+                                    </p>
+                                    <br>
+                                    <p>
+                                        Below is from a phone connected to the Bluetooth module. The driver starts out by displaying a "Hello World" and then some other particulars. The temperature is sent 
+                                        every 2.7 seconds on the LEUART bus. My room sure is toasty!
+                                    </p>
+                                <img src="img/blog/i2c.w.o.cbuff.JPG" alt="">
+                                <br>
+                                <br>
+                                <br>
+                                <a style="color: black; font-size: 14px;" href="https://github.com/NickWroble/ECEN-2370-Embedded-Software_Engineering/tree/master/Lab%205" target="_blank">A link for this lab can be found by clicking anywhere on this sentence.</a>
+                                <br>
+                                <br>
+                                <br>
+                            </div>
+                        </div>
+                        <div class="blog-item">
+                            <h3>Emulating a 1965 Ford Thunderbird's Tail Lights</h3>
+                            <div class="blog-thumb">
+                                <img src="img/blog/thunderbird.gif" alt="">
+                                <div class="blog-date">December 2019</div>
+                                <p>
+                                    In this lab,  a 1965 Ford Thunderbird’s taillight behavior was emulated using the 
+                                    Altera DE10-Lite FPGA. Brake light behavior will not be emulated.
+                                    <br><br>
+                                    The left turn signal will use LEDR[9:7], and the right turn signal will use LEDR[2:0].
+                                    LEDR[6:3] will be off all the time. This emulator will include a hazard light mode, in which all
+                                    lights of the left and right turn signal LEDs will blink simultaneously. One thing to note is that
+                                    hazard mode will have priority over the turn signal behavior. HEX0 will display the current state
+                                    of the machine, in that L, R, and H will be displayed depending on the current state. SW[0] will
+                                    enable the turn signals and SW[1] will turn on the hazard lights. If neither of these switches are
+                                    turned on, all LEDs will be off, and HEX0 will display a blank screen. KEY[0] will be a latched
+                                    system reset that changes based on the negedge of the pushbutton. KEY[1] will be another latch,
+                                    except it will toggle between the left and right turn signals. 
+                                    <br><br>
+                                    To validate the results on our board, a testbench was created, and the output was captured
+                                    using GTKWave. The following GTKWave capture shows this testbench in action. 
+                                    <img src="img/blog/thunderbidtb.png" alt="">
+                                    <br>
+                                    At 0 ms, KEY[1:0] are initialized to 1 as their latches watch for the negedge. SW[9:0] are
+                                    also set to 0. At 0.5 ms, SW[0] is turned on, sending the device into hazard mode. HEX0 updates
+                                    to display H, and the LEDs can be seen switching on and off on the posedge of the clock. At 2 ms,
+                                    SW[1] is turned on, and nothing changes. This is meant to demonstrate that hazard mode has
+                                    priority over turn signal mode. At 2.5 ms, SW[0] is turned off, sending it into right turn signal
+                                    mode. LEDR[2:0] can be seen switching on and off, and HEX0 is updated to display ‘R.’ At 4.5
+                                    ms, KEY[1] is pressed, toggling turnSignal and sending the device into left turn signal mode.
+                                    LEDR[9:7] can be seen switching and HEX0 changes to ‘r.’ At 6.5 ms, KEY[0] is sent low which
+                                    enables reset and disables the LEDs and HEX0. 
+                                </p>
+                                <iframe width="500px" height="400px" src="https://www.youtube.com/embed/OoRfLoYCw6c" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                                <br><br>
+                                <p>Verilog code and a testbench can be found on my GitHub</p>
+                            </div>
+                        </div>
+                        <div class="blog-item">
+                            <h3>Creating an Organic Electrochemical Transistor (OECT)</h3>
+                            <div class="blog-thumb">
+                                <img src="img/blog/9.jpg" alt="">
+                                <div class="blog-date">November 2019</div>
+                                <p>
+                                    In this lab, we created transistors using various chemicals. Unfortunately, photos of the 
+                                    process are unavailable since a majority of the OCET was built in a cleanroom. First, a sheet of 
+                                    glass was cleaned using ethanol. It was then taken into a clean room, and spin-coated with PDOT: PSS. 
+                                    This organic material  will act as the semiconducting material for the OECT. The PDOT is baked onto the glass with a hot plate.
+                                    <br />
+                                    <br />Using Kapton tape, a stencil for the gate and drain connections are created, and a silver paste is applied to the stencil. 
+                                    The tape is removed, and the silver paste is baked onto the glass. The channel between the two electrodes is then isolated by 
+                                    scraping off the PDOT. A well for the gate electrode is created. A silicone well is made using PDMS, and this well will hold the 
+                                    electrolyte for the gate. The PDMS well is placed across the gate and the drain, and the well is filled with saltwater. For the gate, 
+                                    a pellet of Si/SICl pellet is soldered to a wire.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="blog-item">
+                            <h3>Creating a Dye-Sensitized Photovoltaic Using Cherry Juice</h3>
+                            <div class="blog-thumb">
+                                <img src="img/blog/1.jpg" alt="">
+                                <div class="blog-date">October 2019</div>
+                                <p>In this lab, students created a solar cell using readily made materials.</p>
+                            </div>
+                            <div class="blog-thumb">
+                                <img src="img/blog/2.jpg" alt="">
+                                <p>This exercise starts with two indium tin oxide (ITO) coated squares of glass. On the ITO sides, one square is coated with titanium oxide 
+                                    and the other is coated with carbon. The TiO₂ paste is spread out into a thin layer, as to prevent cracking in the next step.
+                                </p>
+                            </div>
+                            <div class="blog-thumb">
+                                <img src="img/blog/3.jpg" alt="">
+                                <p>The squares with TiO₂ are heated for ten minutes to adhere the paste to the glass.</p>
+                            </div>
+                            <div class="blog-thumb">
+                                <img src="img/blog/4.jpg" alt="">
+                                <p>The square is then placed in black cherry juice for ten minutes to allow the juice to absorb into the paste.</p>
+                            </div>
+                            <div class="blog-thumb">
+                                <img src="img/blog/5.jpg" alt="">
+                                <p>Excess juice is rinsed off using water and ethanol</p>
+                            </div>
+                            <div class="blog-thumb">
+                                <img src="img/blog/1.jpg" alt="">
+                                <p>After facing the two ITO sides against each other, the solar cell is complete. Because the ITO is conductive, an anode and cathode can be 
+                                    placed anywhere on the sheets of glass. This cell produced 10mW in ambient lab lighting.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="blog-item">
+                            <h3>TechLock</h3>
+                            <div class="blog-thumb">
+                                <img src="img/blog/7.jpg" alt="">
+                                <div class="blog-date">December 2018</div>
+                                <p>
+                                    TechLock is a smart lock system that integrates RFID and fingerprint sensing technology to secure valuables in a locked box. This design can 
+                                    easily be modified for other various applications.
+                                    <br>TechLock uses a self-made Arduino uno with a fingerprint sensor, RFID sensor, photoresistor, and servo. If the user uses his or her RFID 
+                                    capable card and their fingerprint, the box unlocks due to the servo moving into the “open” position. Someone cannot use their fingerprint and 
+                                    someone else’s card.
+                                </p>
+                            </div>
+                            <iframe width="500px" height="400px"
+                                src="https://www.youtube.com/embed/SJHq5gYiheE" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
+                            </iframe>
+                            <p>
+                                Currently, new users are added in the Arduino code, and I am interested in creating a system to add new users dynamically. After the user is finished placing or 
+                                removing their valuables and close the box, the photoresistor detects that the box is closed and turns the servo to the “closed” position. Code can be found in my GitHub.
+                            </p>
+                        </div>
+                        <div class="blog-item">
+                            <h3>Blackjack using C</h3>
+                            <div class="blog-thumb">
+                                <img src="img/blog/8.png" alt="">
+                                <div class="blog-date">April 2019</div>
+                                <p>
+                                    At the start of the game, a deck of cards from 0 to 51 is created. To get a random card and its value, a random number from zero to 51 is generated. It is then divided by 4, 
+                                    and the integer value is the value of the card. The suit name and value name are printed out by functions. Every time a card is taken from the deck, it is replaced by -1. 
+                                    This allows the program to easily check if a card was already drawn from the deck. The program automatically deals the player and the computer two cards and calculates the 
+                                    sum for both players. It then checks for a blackjack, and if there is not one, it continues the game. The user can then enter ‘hit’ or ‘stand.’ An invalid input continues 
+                                    the game, and asks the user to enter something valid. After the player is done, the computer plays until it busts or it beats the player. Code can be found on my GitHub.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <script src="js/jquery-3.2.1.min.js"></script>
+        <script src="js/main.js"></script>
+        <script src="js/preloader.js"></script>
+        <script src="js/owl.carousel.min.js"></script>
+    </body>
+</html>
